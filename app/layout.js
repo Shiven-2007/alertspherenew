@@ -21,10 +21,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <Head>
-      <link
-        href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css"
-        rel="stylesheet"
-      />
       </Head>
       <body
       >

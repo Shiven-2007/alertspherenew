@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 from datetime import datetime
 from dateutil import parser
-
+import pytz
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -47,6 +47,30 @@ def convert_time_format(time_str):
     output_format = '%Y-%m-%dT%H:%M:%S'
     return dt.strftime(output_format)
 
+def remove_ist_from_string(time_str):
+    # Replace ' IST ' with an empty string
+    return time_str.replace(' IST ', ' ')
+
+def convert_ist_to_gmt(ist_time_str):
+    # Define the format of the input IST time string without the time zone
+    ist_format = "%a %b %d %H:%M:%S %Y"
+    
+    # Parse the IST time string into a datetime object (without timezone)
+    ist_time = datetime.strptime(remove_ist_from_string(ist_time_str), ist_format)
+    
+    # Define the IST and GMT timezones
+    ist_zone = pytz.timezone('Asia/Kolkata')
+    gmt_zone = pytz.timezone('GMT')
+    
+    # Localize the time to IST
+    ist_time = ist_zone.localize(ist_time)
+    
+    # Convert IST to GMT
+    gmt_time = ist_time.astimezone(gmt_zone)
+    
+    # Format the GMT time to the desired format
+    return gmt_time.strftime("%Y-%m-%dT%H:%M:%S")
+
 # Function to fetch data from multiple APIs
 def fetch_data():
     global alldata
@@ -59,15 +83,14 @@ def fetch_data():
 
         response_1 = requests.get(api_1_url)
         response_2 = requests.get(api_2_url)
-        response_3 = requests.get(api_3_url)
-        print("somethings happenin")
+        # response_3 = requests.get(api_3_url)
 
 
 
-        if response_1.status_code == 200 and response_2.status_code == 200 and response_3.status_code == 200:
+        if response_1.status_code == 200 and response_2.status_code == 200:
             gdacs_data = response_1.json()
             sachet_eq_data = response_2.json()
-            sachet_data = response_3.json()
+            # sachet_data = response_3.json()
             newgdacsdata=[]
             
             for data in gdacs_data["features"]:
@@ -82,23 +105,40 @@ def fetch_data():
                     d1["magnitude"] = data["properties"]["severitydata"]["severity"]
                 else:
                     d1["magnitude"] = ""
-                if d1 not in alldata["data"]:
-                    print(d1)
-                    alldata["data"].append(d1)
+                is_duplicate = False
 
+                # Compare against existing data
+                for existing_alert in alldata["data"]:
+                    if (existing_alert["longitude"] == d1["longitude"] and
+                        existing_alert["latitude"] == d1["latitude"]):
+                        is_duplicate = True
+                        break
+
+                # Add to the list if not a duplicate
+                if not is_duplicate:
+                    alldata["data"].append(d1)
+                
             for data in sachet_eq_data["alerts"]:
                 d1={}
                 d1["country"] = data["direction"] if "," not in data["direction"] else "India"
                 d1["disaster"]="earthquake"
-                d1["date"]=convert_time_format(data["effective_start_time"])
+                d1["date"]=convert_ist_to_gmt(data["effective_start_time"])
                 d1["magnitude"]=data["magnitude"]
                 d1["longitude"] = data["longitude"]
                 d1["latitude"] = data["latitude"]
-                if d1 not in alldata["data"]:
+                for existing_alert in alldata["data"]:
+                    if (existing_alert["longitude"] == d1["longitude"] and
+                        existing_alert["latitude"] == d1["latitude"] and
+                        existing_alert["disaster"] == d1["disaster"]):
+                        is_duplicate = True
+                        break
+
+                # Add to the list if not a duplicate
+                if not is_duplicate:
                     alldata["data"].append(d1)
 
-            for data in sachet_data["nowcastDetails"]:
-                pass
+            # for data in sachet_data["nowcastDetails"]:
+            #     pass
 
             # Notify all connected clients that new data is available
             socketio.emit('new_data_available')
@@ -115,7 +155,7 @@ scheduler.start()
 # Serve data at this route
 @app.route('/fetchingdata', methods=['GET'])
 def serve_data():
-    return jsonify({"data":remove_duplicates(alldata["data"])})
+    return jsonify({"data":alldata["data"]})
 
 @app.route("/fetchnewdata", methods=['GET'])
 def idk():

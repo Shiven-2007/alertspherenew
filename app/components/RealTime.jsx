@@ -4,11 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import World from "./Globe1";
 import Globe2 from "./Globe2";
 
+import { Poppins } from 'next/font/google'
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700','800','900'],
+  subsets: ['latin'],
+});
+
 export default function RealTime({ data }) {
   const [isMounted, setIsMounted] = useState(false);
   const [dimensions, setDimensions] = useState([0, 0]);
-  const [disaster, setDisaster] = useState("ALL");
-  const [country, setCountry] = useState("ALL");
+  const [disaster, setDisaster] = useState("disaster");
+  const [country, setCountry] = useState("country");
 
   useEffect(() => {
     setDimensions([window.innerHeight / 2, 0]);
@@ -20,12 +27,12 @@ export default function RealTime({ data }) {
   const filteredData = data["data"]
     .filter((item) => {
       return (
-        (country === "ALL" || item.country === country) &&
-        (disaster === "ALL" || item.disaster === disaster)
+        (country === "ALL" || country==="country" || item.country === country) &&
+        (disaster === "ALL" || disaster==="disaster" || item.disaster === disaster)
       );
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date))
-     // Show at most 6 entries
+
 
   const Item = (data) => {
     return <div className="flex"></div>;
@@ -39,6 +46,8 @@ export default function RealTime({ data }) {
   const countries = ["ALL", ...getUniqueValues(data["data"], "country")];
   const disasters = ["ALL", ...getUniqueValues(data["data"], "disaster")];
 
+
+
   const handleCountryChange = (e) => {
     setCountry(e.target.value);
   };
@@ -47,18 +56,22 @@ export default function RealTime({ data }) {
     setDisaster(e.target.value);
   };
 
+  const toSentenceCase = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   return (
-    <div className="mx-4 bg-gray-200 border-zinc-400 border p-4 my-4 rounded-lg h-[85vh]">
-      <h1>Real-Time Disasters</h1>
-      <div className="flex gap-4 h-[90%]">
-        <div className="rounded-2xl overflow-hidden my-2 flex-1">
-          <Globe2 />
+    <div className="mx-4 p-4 my-4 rounded-lg">
+      <h1 className={"text-5xl font-bold " + poppins.className}>Real-Time Disasters</h1>
+      <div className="flex gap-4 h-[80vh]">
+        <div className="rounded-2xl overflow-hidden my-2 w-1/2">
+          <Globe2 data={filteredData}/>
         </div>
-        <div className="flex-1 overflow-auto h-[90%]">
-          <div className="sticky top-0 bg-gray-200">
+        <div className="w-1/2 overflow-auto">
+          <div className="sticky top-0 bg-white z-20">
             <label>
-              Country:
-              <select value={country} onChange={handleCountryChange}>
+              <select value={country} onChange={handleCountryChange} className="px-2 py-4 bg-[#cbd0d0] rounded-lg mr-4 font-bold">
+              <option value='country' disabled  className="hidden">Country</option>
                 {countries.map((c, index) => (
                   <option key={index} value={c}>
                     {c}
@@ -67,30 +80,46 @@ export default function RealTime({ data }) {
               </select>
             </label>
             <label>
-              Disaster Type:
-              <select value={disaster} onChange={handleDisasterChange}>
+              <select value={disaster} onChange={handleDisasterChange} className="px-2 py-4 bg-[#cbd0d0] rounded-lg mr-4 font-bold">
+              <option value='disaster' disabled className="hidden">Disaster</option>
                 {disasters.map((d, index) => (
                   <option key={index} value={d}>
-                    {d}
+                    {toSentenceCase(d)}
                   </option>
                 ))}
               </select>
             </label>
-            <div className="grid grid-cols-3 justify-center">
-              <div>COUNTRY</div>
-              <div>DISASTER</div>
-              <div>TIME</div>
+            <div className="flex justify-between items-center py-4 px-4 bg-[#cbd0d0] rounded-lg mt-4 font-bold">
+              <div className="w-1/3 text-center">COUNTRY</div>
+              <div className="w-1/3 text-center">DISASTER</div>
+              <div className="w-1/3 text-center">TIME</div>
             </div>
           </div>
           <div>
             
-            {filteredData.map((item, index) => (
-              <div key={index} className="grid grid-cols-3 justify-center py-2">
-                <div>{item.country}</div>
-                <div>{item.disaster}</div>
-                <div>{item.date}</div>
-              </div>
-            ))}
+            {filteredData.map((item, index) => {
+              let bgColorClass = '';
+
+              if (item.alert) {
+                // Background color based on alert value
+                bgColorClass = item.alert === 2 ? 'bg-orange-300' : item.alert === 3 ? 'bg-red-500' : '';
+              } else {
+                // Background color based on magnitude
+                if (item.magnitude > 6) {
+                  bgColorClass = 'bg-red-500';
+                } else if (item.magnitude > 4) {
+                  bgColorClass = 'bg-orange-300';
+                } else {
+                  bgColorClass = 'bg-yellow-300'
+                }
+              }
+             return <div key={index} className={`flex justify-between items-center my-2 py-4 px-4 ${bgColorClass} rounded-xl`}>
+              <div className="w-1/3 text-center">{item.country}</div>
+              <div className="w-1/3 text-center">{toSentenceCase(item.disaster)} {item.magnitude}</div>
+              <div className="w-1/3 text-center">{item.date}</div>
+              
+            </div>}
+            )}
           </div>
         </div>
       </div>

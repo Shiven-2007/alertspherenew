@@ -13,6 +13,14 @@ import {
 } from "chart.js";
 import { useState, useEffect } from "react";
 
+import { Poppins } from 'next/font/google'
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700','800','900'],
+  subsets: ['latin'],
+});
+
+
 // Register necessary components with ChartJS
 ChartJS.register(
   LineElement,
@@ -26,7 +34,7 @@ ChartJS.register(
 
 const DisasterLineChart = () => {
   const [chartData, setChartData] = useState(null);
-  const [country, setCountry] = useState("ALL");
+  const [country, setCountry] = useState("country");
   const handleCountryChange = (e) => {
     setCountry(e.target.value);
   };
@@ -40,7 +48,7 @@ const DisasterLineChart = () => {
   ];
   const myFilterFunction = (data) => {
     const fdata =
-      country === "ALL"
+      country === "ALL" || country === 'country'
         ? data
         : data.filter((item) => item.Country === country);
     const filteredDisasters = fdata.filter((item) =>
@@ -124,10 +132,11 @@ const DisasterLineChart = () => {
   };
 
   return (
-    <>
+    <div className="px-4 mx-4">
+    <h1 className={"text-5xl font-bold " + poppins.className}>Historic Data</h1>
       <label>
-        Country:
-        <select value={country} onChange={handleCountryChange}>
+        <select value={country} onChange={handleCountryChange} className="px-2 py-4 bg-[#cbd0d0] rounded-lg mr-4 font-bold my-4">
+          <option value='country' className="hidden" selected disabled>Country</option>
           {countries.map((c, index) => (
             <option key={index} value={c}>
               {c}
@@ -167,7 +176,7 @@ const DisasterLineChart = () => {
           />
         )}
       </div>
-    </>
+    </div>
   );
 };
 
