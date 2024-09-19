@@ -7,11 +7,23 @@ import time
 from datetime import datetime
 from dateutil import parser
 import pytz
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all origins
-socketio = SocketIO(app, cors_allowed_origins="*")
-# socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins
-# Data storage
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi_socketio import SocketManager
+
+app = FastAPI()
+
+# Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+sio = SocketManager(app=app, cors_allowed_origins="*")
+
 alldata = {"data":[]}
 
 eventtodis={
@@ -141,7 +153,7 @@ def fetch_data():
             #     pass
 
             # Notify all connected clients that new data is available
-            socketio.emit('new_data_available')
+            sio.emit('new_data_available')
         else:
             print("Error fetching data.")
     except Exception as e:
@@ -152,17 +164,47 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(func=fetch_data, trigger="interval", minutes=10)
 scheduler.start()
 
-# Serve data at this route
-@app.route('/fetchingdata', methods=['GET'])
-def serve_data():
-    return jsonify({"data":alldata["data"]})
+# # Serve data at this route
+# @app.route('/fetchingdata', methods=['GET'])
+# def serve_data():
+#     return jsonify({"data":alldata["data"]})
 
-@app.route("/fetchnewdata", methods=['GET'])
-def idk():
+# @app.route("/fetchnewdata", methods=['GET'])
+# def idk():
+#     fetch_data()
+#     return {"status":"200"}
+
+# # Start server
+# if __name__ == '__main__':
+#     fetch_data()
+#     socketio.run(app)  # Run the app on port 5000
+@app.get('/fetchingdata')
+async def serve_data():
+    return JSONResponse({"data": alldata["data"]})
+
+# Fetch new data
+@app.get("/fetchnewdata")
+async def idk():
     fetch_data()
-    return {"status":"200"}
+    return {"status": "200"}
 
-# Start server
+@sio.on('connect')
+async def handle_connect(sid, environ):
+    print(f"Client connected: {sid}")
+    await sio.emit('response', {'message': 'Connected'}, to=sid)
+
+@sio.on('disconnect')
+async def handle_disconnect(sid):
+    print(f"Client disconnected: {sid}")
+
+@sio.on('message')
+async def handle_message(sid, data):
+    print(f"Received message: {data} from {sid}")
+    await sio.emit('response', {'message': f'Message received: {data}'}, to=sid)
+
+
+# Run the server
 if __name__ == '__main__':
-    fetch_data()
-    socketio.run(app)  # Run the app on port 5000
+    import uvicorn
+    fetch_data()  # Initial data fetch
+    uvicorn.run(app, host='0.0.0.0', port=5000)
