@@ -5,6 +5,8 @@ import DangerousCountries from "./components/DangerousCountries";
 import DisasterLineChart from "./components/Historic";
 import Predicted from "./components/Predicted";
 import Emergency from "./components/Emergency";
+import predictedData from "@/app/api/predictedData.json"
+
 
 export default async function Home() {
 //   const data = [
@@ -22,16 +24,8 @@ const idata = await fetch("http://127.0.0.1:5000/fetchingdata",{
   cache: 'no-store'
 });
 const data = await idata.json()
-const idata2 = ''
-const predictedData = [
-  ["BRAZIL", "FLOOD", "16:37"],
-  ["INDIA", "EARTHQUAKE", "8:37"],
-  ["BRAZIL", "FLOOD", "16:37"],
-  ["BRAZIL", "FLOOD", "5:37"],
-  ["BRAZIL", "FLOOD", "4:37"],
-  ["BRAZIL", "FLOOD", "0:37"],
-  ["BRAZIL", "FLOOD", "5:33"],
-];
+const predicteddata = predictedData
+
 
 const contacts ={
   "countries": {
@@ -87,7 +81,7 @@ const contacts ={
         <RealTime data={data} />
       </section>
       <section id="predicted">
-        <Predicted data={data}/>
+        <Predicted data={predicteddata}/>
       </section>
       <DangerousCountries data={data["data"]} />
       <DisasterLineChart />

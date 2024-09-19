@@ -62,34 +62,38 @@ export default function Globe2({ data }) {
 
 		mapRef.current.scrollZoom.disable();
 
+		
+	}, []);
+
+	useEffect(() =>{
 		data.map((d) => {
 
-      let bgColorClass = 'green';
-
-              if (d.alert) {
-                // Background color based on alert value
-                bgColorClass = d.alert === 2 ? '#FDBA74' : d.alert === 3 ? '#EF4444' : '';
-              } else {
-                // Background color based on magnitude
-                if (d.magnitude > 6) {
-                  bgColorClass = '#EF4444';
-                } else if (d.magnitude > 4) {
-                  bgColorClass = '#FDBA74';
-                } else {
-                  bgColorClass = '#FCD34D'
-                }
-              }
-			new mapboxgl.Marker({ color: bgColorClass })
-				.setLngLat([d["longitude"], d["latitude"]])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }) // add popups
-            .setHTML(
-              `<h3>${d["country"]}</h3><p>${d["disaster"]}</p>`
-            )
-        )
-				.addTo(mapRef.current);
-		});
-	}, [data]);
+			let bgColorClass = 'green';
+	  
+					if (d.alert) {
+					  // Background color based on alert value
+					  bgColorClass = d.alert === 2 ? '#FDBA74' : d.alert === 3 ? '#EF4444' : '';
+					} else {
+					  // Background color based on magnitude
+					  if (d.magnitude > 6) {
+						bgColorClass = '#EF4444';
+					  } else if (d.magnitude > 4) {
+						bgColorClass = '#FDBA74';
+					  } else {
+						bgColorClass = '#FCD34D'
+					  }
+					}
+				  new mapboxgl.Marker({ color: bgColorClass })
+					  .setLngLat([d["longitude"], d["latitude"]])
+			  .setPopup(
+				new mapboxgl.Popup({ offset: 25 }) // add popups
+				  .setHTML(
+					`<h3>${d["country"]}</h3><p>${d["disaster"]}</p>`
+				  )
+			  )
+					  .addTo(mapRef.current);
+			  });
+	},[data])
 
 	return (
 		<div className="h-full">

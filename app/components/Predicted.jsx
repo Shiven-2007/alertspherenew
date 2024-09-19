@@ -30,8 +30,7 @@ export default function Predicted({ data }) {
         (disaster === "ALL"|| disaster==='disaster' || item.disaster === disaster)
       );
     })
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0,6)
+    .sort((a, b) => - new Date(b.date) + new Date(a.date))
      // Show at most 6 entries
   const Item = (data) => {
     return <div className="flex"></div>;
@@ -62,7 +61,7 @@ export default function Predicted({ data }) {
       <h1 className={"text-5xl font-bold " + poppins.className}>Predicted Disasters</h1>
       <div>
         <div className="rounded-2xl overflow-hidden my-2 h-1/2">
-          <Globe3 />
+          <Globe3 data={data["data"]} />
         </div>
         <div className="bg-gray-200 border-zinc-400 border p-4 rounded-xl">
           <div>
@@ -92,7 +91,7 @@ export default function Predicted({ data }) {
               <div className="w-1/3 text-center">TIME</div>
             </div>
           </div>
-          <div>
+          <div className="overflow-y-scroll" style={{ height: `${6 * 4}rem` }}>
             
             {filteredData.map((item, index) => (
               <div key={index} className={`flex justify-between items-center py-4 px-4 ${
