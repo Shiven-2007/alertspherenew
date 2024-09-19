@@ -83,6 +83,11 @@ def convert_ist_to_gmt(ist_time_str):
     # Format the GMT time to the desired format
     return gmt_time.strftime("%Y-%m-%dT%H:%M:%S")
 
+
+async def emit_new_data():
+    # Notify all connected clients that new data is available via SocketIO
+    await sio.emit('new_data_available')
+
 # Function to fetch data from multiple APIs
 def fetch_data():
     global alldata
@@ -153,7 +158,7 @@ def fetch_data():
             #     pass
 
             # Notify all connected clients that new data is available
-            sio.emit('new_data_available')
+            emit_new_data()
         else:
             print("Error fetching data.")
     except Exception as e:
