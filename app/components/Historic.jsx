@@ -39,24 +39,7 @@ const DisasterLineChart = () => {
     setCountry(e.target.value);
   };
   const [jsonData, setJsonData] = useState();
-  const disasterTypesToInclude = [
-    "Drought",
-    "Flood",
-    "Earthquake",
-    "Storm",
-    "Volcanic Activity",
-  ];
-  const myFilterFunction = (data) => {
-    const fdata =
-      country === "ALL" || country === 'country'
-        ? data
-        : data.filter((item) => item.Country === country);
-    const filteredDisasters = fdata.filter((item) =>
-      disasterTypesToInclude.includes(item["Disaster Type"])
-    );
-
-    return filteredDisasters;
-  };
+  
   const [countries, setCountries] = useState(["ALL"]);
   
   useEffect(() => {
@@ -67,6 +50,31 @@ const DisasterLineChart = () => {
   }, []);
   
   useEffect(() => {
+    const disasterTypesToInclude = [
+      "Drought",
+      "Flood",
+      "Earthquake",
+      "Storm",
+      "Volcanic Activity",
+    ];
+    const myFilterFunction = (data) => {
+      const fdata =
+        country === "ALL" || country === 'country'
+          ? data
+          : data.filter((item) => item.Country === country);
+      const filteredDisasters = fdata.filter((item) =>
+        disasterTypesToInclude.includes(item["Disaster Type"])
+      );
+  
+      return filteredDisasters;
+    };
+    const disasterColors = {
+      Drought: "#FFA07A", // Light Salmon
+      Flood: "#00BFFF", // Deep Sky Blue
+      Earthquake: "#FFD700", // Gold
+      Storm: "#FF4500", // Orange Red
+      "Volcanic Activity": "#8A2BE2", // Blue Violet
+    };
     if (jsonData && country) {
       setCountries(['ALL', ...getUniqueValues(jsonData, "Country")])
       // Initialize an object to store disaster counts by year and disaster type
@@ -118,13 +126,7 @@ const DisasterLineChart = () => {
     }
   }, [jsonData, country]);
 
-  const disasterColors = {
-    Drought: "#FFA07A", // Light Salmon
-    Flood: "#00BFFF", // Deep Sky Blue
-    Earthquake: "#FFD700", // Gold
-    Storm: "#FF4500", // Orange Red
-    "Volcanic Activity": "#8A2BE2", // Blue Violet
-  };
+  
 
   const getUniqueValues = (array, index) => {
     const values = array.map((item) => item[index]);

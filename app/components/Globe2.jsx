@@ -1,6 +1,5 @@
 "use client";
 import mapboxgl from "mapbox-gl";
-import Map from "react-map-gl";
 import React, { useEffect, useState, useRef } from "react";
 const size = 200;
 const pulsingDot = {
@@ -90,7 +89,7 @@ export default function Globe2({ data }) {
         )
 				.addTo(mapRef.current);
 		});
-	}, []);
+	}, [data]);
 
 	return (
 		<div className="h-full">
